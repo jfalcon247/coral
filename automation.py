@@ -48,7 +48,7 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
-def makeCertificate(orderNum, name, gpsLat, gpsLong, instagram, slideFlagAddress):
+def makeCertificate(orderNum, name, gpsLat, gpsLong, instagram, slideFlagAddress, pdfFlagAddress):
 
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
@@ -104,6 +104,25 @@ def makeCertificate(orderNum, name, gpsLat, gpsLong, instagram, slideFlagAddress
     result = SHEETS.spreadsheets().values().update(spreadsheetId=sheet_id, range=slideFlagAddress, valueInputOption='USER_ENTERED',body=body).execute()
     print('{0} cells updated.'.format(result.get('updatedCells')))
 
+    # download as pdf
+    pdf = DRIVE.files().export(fileId = presentation_copy_id, mimeType = 'application/pdf').execute()
+    
+    fn = '{}.pdf'.format(orderNum) #% os.path.splitext(orderNum)
+    print(fn)
+    with open(fn, 'wb') as fh:
+        fh.write(pdf)
+        print('Downloaded pdf.')
+    
+    # update Google Sheet pdfFlag
+    values = [
+        [1]
+    ]
+    body = {
+        'values': values
+    }
+    result = SHEETS.spreadsheets().values().update(spreadsheetId=sheet_id, range=pdfFlagAddress, valueInputOption='USER_ENTERED',body=body).execute()
+    print('{0} cells updated.'.format(result.get('updatedCells')))
+
 
 def main():
     
@@ -146,10 +165,10 @@ def main():
                             needSlides['gpsLat'][i],
                             needSlides['gpsLong'][i],
                             needSlides['instagram'][i],
-                            needSlides['slideFlagAddress'][i]
+                            needSlides['slideFlagAddress'][i],
+                            needSlides['pdfFlagAddress'][i]
                             )
     except: print("No new records.")
-
 
 if __name__ == '__main__':
     main()
