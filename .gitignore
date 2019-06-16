@@ -1,0 +1,8 @@
+# don't track the contents of these folders
+bin/
+lib/
+include/
+
+# don't track these files
+client_secret.json
+storage.json
